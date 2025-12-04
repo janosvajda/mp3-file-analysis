@@ -1,4 +1,4 @@
-import type { FrameHeader } from "./frameHeader";
+import type { FrameHeader } from "./parseFrameHeader";
 
 export function getChannelMode(mode: number): FrameHeader["channelModeName"] {
   switch (mode) {
