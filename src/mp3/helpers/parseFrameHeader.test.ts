@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { parseFrameHeader } from "./parseFrameHeader";
-import { computeFrameSize } from "./computeFrameSize";
+import { computeFrameSize, FRAME_SIZE_COEFFICIENT } from "./computeFrameSize";
 
 //@todo this might not be correct yet, needs to be checked in docs, this whole mp3 thing is a big mess
 const buildHeader = ({
@@ -26,14 +26,18 @@ const buildHeader = ({
 };
 
 test("parses a valid header and computes frame size", () => {
-  const headerBuffer = buildHeader();
+  const bitrateIndex = 0b1001; // 128 kbps
+  const sampleRateIndex = 0b00; // 44100 Hz
+  const padding = 0;
+
+  const headerBuffer = buildHeader({ bitrateIndex, sampleRateIndex, padding });
   const parsed = parseFrameHeader(headerBuffer, 0);
   expect(parsed.bitrateKbps).toBe(128);
   expect(parsed.sampleRate).toBe(44100);
-  expect(parsed.padding).toBe(0);
+  expect(parsed.padding).toBe(padding);
 
   const size = computeFrameSize(parsed);
-  expect(size).toBe(Math.floor((144000 * 128) / 44100));
+  expect(size).toBe(Math.floor((FRAME_SIZE_COEFFICIENT * parsed.bitrateKbps) / parsed.sampleRate));
 });
 
 test("throws on insufficient header bytes", () => {

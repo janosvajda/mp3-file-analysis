@@ -1,16 +1,19 @@
 import type { FrameHeader } from "./parseFrameHeader";
 
+/**
+ * Maps the MPEG channel mode index (0–3) to its descriptive name.
+ * Falls back to `"stereo"` if the mode value is out of range.
+ *
+ * @param mode Numeric MPEG channel mode (0–3).
+ * @returns The corresponding channel mode name.
+ */
 export function getChannelMode(mode: number): FrameHeader["channelModeName"] {
-  switch (mode) {
-    case 0:
-      return "stereo";
-    case 1:
-      return "joint_stereo";
-    case 2:
-      return "dual_channel";
-    case 3:
-      return "single_channel";
-    default:
-      return "stereo";
-  }
+  const modes: Record<number, FrameHeader["channelModeName"]> = {
+    0: "stereo",
+    1: "joint_stereo",
+    2: "dual_channel",
+    3: "single_channel"
+  };
+
+  return modes[mode] ?? "stereo";
 }
