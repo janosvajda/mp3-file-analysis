@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { createFrameAnalyzer } from "../src/mp3/frameAnalyzer";
-import { parseFrameHeader } from "../src/mp3/helpers/parseFrameHeader";
-import { computeFrameSize } from "../src/mp3/helpers/computeFrameSize";
+import { createFrameAnalyzer } from "../src/plugins/parser/frameAnalyzer";
+import { parseFrameHeader } from "../src/plugins/parser/helpers/parseFrameHeader";
+import { computeFrameSize } from "../src/plugins/parser/helpers/computeFrameSize";
 
 const buildHeader = ({
   bitrateIndex = 0b1001, // 128 kbps

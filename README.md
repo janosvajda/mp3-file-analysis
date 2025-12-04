@@ -25,8 +25,8 @@ npm run build && npm start
 Examples:
 
 - Postman: POST `http://localhost:3000/file-upload`, Body → form-data, add one `file` field of type File, pick an MP3, send; expect `{"frameCount": <number>}`.
-- Curl (sample): `curl -F "file=@samples/sample.mp3" http://localhost:3000/file-upload`
-- Curl (explicit content-type): `curl -X POST -H "Content-Type: multipart/form-data" -F "file=@samples/SoundHelix-Song-1.mp3" http://localhost:3000/file-upload`
+- Curl (sample): `curl -F "file=@samples/sample.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
+- Curl (explicit content-type): `curl -F "file=@samples/SoundHelix-Song-1.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
 - Curl (no file, expect 400): `curl -X POST http://localhost:3000/file-upload`
 
 ## Postman

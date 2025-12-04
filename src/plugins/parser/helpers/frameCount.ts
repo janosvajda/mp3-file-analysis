@@ -39,17 +39,25 @@ export function frameCount(buffer: Buffer, logger: Logger): number {
   let frames = 0;
 
   while (offset + FRAME_HEADER_BYTES <= buffer.length) {
-    const header = parseFrameHeader(buffer, offset);
+    let header;
+    try {
+      header = parseFrameHeader(buffer, offset);
+    } catch {
+      offset += 1;
+      continue;
+    }
     const frameSize = computeFrameSize(header);
 
     if (frameSize <= 0) {
-      throw new Error("Encountered frame with invalid size.");
+      offset += 1;
+      continue;
     }
 
     const nextOffset = offset + frameSize;
 
     if (nextOffset > buffer.length) {
-      throw new Error("Frame size exceeds buffer length.");
+      offset += 1;
+      continue;
     }
 
     logger.info(`Frame ${frames} @ offset ${offset} size ${frameSize}`);

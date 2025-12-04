@@ -1,8 +1,9 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import multipart from "@fastify/multipart";
 import dotenv from "dotenv";
-import { createFrameAnalyzer } from "./mp3";
-import { registerFileUploadRoute } from "./routes/fileUpload";
+import { createFrameAnalyzer } from "./plugins/parser";
+import { fileUploadRoutes } from "./plugins/fileUpload/fileUpload";
+import { errorHandler } from "./plugins/errorHandler/errorHandler";
 
 dotenv.config();
 
@@ -45,7 +46,8 @@ export function buildServer(
     }
   });
 
-  registerFileUploadRoute(server, analyzer);
+  server.register(errorHandler, { maxFileSizeBytes: MAX_FILE_SIZE_BYTES });
+  server.register(fileUploadRoutes, { analyzer, maxFileSizeBytes: MAX_FILE_SIZE_BYTES });
 
   return server;
 }

@@ -1,6 +1,6 @@
 import { getChannelMode } from "./getChannelMode";
 
-const BITRATE_INDEXES: Array<number | null> = [
+const BITRATE_INDEXES_MPEG1_LAYER3: Array<number | null> = [
   null, // free
   32,
   40,
@@ -15,7 +15,27 @@ const BITRATE_INDEXES: Array<number | null> = [
   192,
   224,
   256,
-  320, //@todo is this the max?
+  320,
+  null // bad
+];
+
+// MPEG Version 2 / 2.5 Layer III bitrates
+const BITRATE_INDEXES_MPEG2_LAYER3: Array<number | null> = [
+  null, // free
+  8,
+  16,
+  24,
+  32,
+  40,
+  48,
+  56,
+  64,
+  80,
+  96,
+  112,
+  128,
+  144,
+  160,
   null // bad
 ];
 
@@ -38,6 +58,8 @@ const MODE_EXTENSION_OFFSET = 4;
 const EMPHASIS_OFFSET = 0;
 
 const MPEG_VERSION_1 = 0b11;
+const MPEG_VERSION_2 = 0b10;
+const MPEG_VERSION_25 = 0b00;
 const LAYER_III = 0b01;
 const FRAME_HEADER_BYTES = 4; // MPEG frame header length in bytes
 //@todo double check from http://www.mp3-tech.org/programmer/frame_header.html
@@ -48,6 +70,7 @@ export type FrameHeader = {
   padding: number;
   bitrateIndex: number;
   sampleRateIndex: number;
+  mpegVersion: 1 | 2 | 2.5;
   versionBits: number;
   layerBits: number;
   protectionBit: number;
@@ -94,11 +117,19 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   const versionBits = (header >>> MPEG_VERSION_OFFSET) & 0x3;
   const layerBits = (header >>> LAYER_OFFSET) & 0x3;
 
-  //@todo now only this version is supported, but this can be more flexible, ready for extension
-  const isMpegVersion1 = versionBits === MPEG_VERSION_1;
   const isLayer3 = layerBits === LAYER_III;
+  let mpegVersion: 1 | 2 | 2.5;
+  if (versionBits === MPEG_VERSION_1) {
+    mpegVersion = 1;
+  } else if (versionBits === MPEG_VERSION_2) {
+    mpegVersion = 2;
+  } else if (versionBits === MPEG_VERSION_25) {
+    mpegVersion = 2.5 as const;
+  } else {
+    throw new Error("Unsupported MPEG version.");
+  }
 
-  if (!isMpegVersion1 || !isLayer3) {
+  if (!isLayer3) {
     throw new Error("Unsupported MPEG version or layer.");
   }
 
@@ -110,8 +141,17 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   const modeExtension = (header >>> MODE_EXTENSION_OFFSET) & 0x3;
   const emphasis = (header >>> EMPHASIS_OFFSET) & 0x3;
 
-  const bitrateKbps = BITRATE_INDEXES[bitrateIndex];
-  const sampleRate = SAMPLE_RATE_INDEXES[sampleRateIndex];
+  const bitrateTable =
+    mpegVersion === 1 ? BITRATE_INDEXES_MPEG1_LAYER3 : BITRATE_INDEXES_MPEG2_LAYER3;
+
+  const bitrateKbps = bitrateTable[bitrateIndex];
+  let sampleRate = SAMPLE_RATE_INDEXES[sampleRateIndex];
+
+  if (mpegVersion === 2 && sampleRate != null) {
+    sampleRate = sampleRate / 2;
+  } else if (mpegVersion === 2.5 && sampleRate != null) {
+    sampleRate = sampleRate / 4;
+  }
 
   if (bitrateKbps == null || sampleRate == null) {
     throw new Error("Invalid bitrate or sample rate in frame header.");
@@ -123,6 +163,7 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
     padding: paddingBit,
     bitrateIndex,
     sampleRateIndex,
+    mpegVersion,
     versionBits,
     layerBits,
     protectionBit,

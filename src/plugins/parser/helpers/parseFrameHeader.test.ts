@@ -50,7 +50,7 @@ test("throws on invalid frame sync", () => {
 });
 
 test("throws on unsupported version or layer", () => {
-  const badVersion = buildHeader({ versionBits: 0b10 });
+  const badVersion = buildHeader({ versionBits: 0b01 }); // reserved
   expect(() => parseFrameHeader(badVersion, 0)).toThrow();
 
   const badLayer = buildHeader({ layerBits: 0b10 });

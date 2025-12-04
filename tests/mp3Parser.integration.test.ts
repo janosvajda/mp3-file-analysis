@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { createFrameAnalyzer } from "../src/mp3";
-import { parseFrameHeader } from "../src/mp3/helpers/parseFrameHeader";
+import { createFrameAnalyzer } from "../src/plugins/parser";
+import { parseFrameHeader } from "../src/plugins/parser/helpers/parseFrameHeader";
 
 test("counts frames in a synthetic MPEG1 Layer III buffer", () => {
   const bitrateIndex = 0b1001; // 128 kbps
