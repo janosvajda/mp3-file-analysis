@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "MP3 File Analysis App",
   "main": "index.js",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
