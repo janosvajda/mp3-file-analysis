@@ -1,8 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import multipart from "@fastify/multipart";
-import { constants as http2 } from "node:http2";
 import dotenv from "dotenv";
 import { createFrameAnalyzer } from "./mp3";
+import { registerFileUploadRoute } from "./routes/fileUpload";
 
 dotenv.config();
 
@@ -45,31 +45,7 @@ export function buildServer(
     }
   });
 
-  server.post("/file-upload", async (request, reply) => {
-    const file = await request.file();
-
-    if (!file) {
-      request.log.warn("No file provided in /file-upload");
-      reply.code(http2.HTTP_STATUS_BAD_REQUEST);
-      return { error: "No file uploaded." };
-    }
-
-    try {
-      const buffer = await file.toBuffer();
-      const frameCount = analyzer.countMp3Frames(buffer);
-
-      reply.code(http2.HTTP_STATUS_OK).header("Content-Type", "application/json");
-      return { frameCount };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unable to process MP3 file.";
-
-      request.log.error({ err: error }, "Failed to process MP3 upload");
-
-      reply.code(http2.HTTP_STATUS_BAD_REQUEST);
-      return { error: message };
-    }
-  });
+  registerFileUploadRoute(server, analyzer);
 
   return server;
 }

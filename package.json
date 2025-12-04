@@ -15,8 +15,8 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["mp3", "mp3 frame", "MP3"],
+  "author": "Janos Vajda",
   "license": "ISC",
   "dependencies": {
     "@fastify/multipart": "^9.3.0",
