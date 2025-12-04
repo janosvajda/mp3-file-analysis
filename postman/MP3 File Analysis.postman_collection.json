@@ -9,17 +9,18 @@
       "name": "Upload MP3",
       "request": {
         "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            {
-              "key": "file",
-              "type": "file",
-              "src": "{{sampleFile}}"
-            }
-          ]
-        },
+      "header": [],
+      "body": {
+        "mode": "formdata",
+        "formdata": [
+          {
+            "key": "file",
+            "type": "file",
+            "contentType": "audio/mpeg",
+            "src": "{{sampleFile}}"
+          }
+        ]
+      },
         "url": {
           "raw": "{{baseUrl}}/file-upload",
           "host": ["{{baseUrl}}"],

@@ -48,17 +48,25 @@ export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
   let offset = id3Size;
 
   while (offset + headerSize <= bufferLength) {
-    const header = parseFrameHeader(buffer, offset);
+    let header;
+    try {
+      header = parseFrameHeader(buffer, offset);
+    } catch {
+      offset += 1;
+      continue;
+    }
     const frameSize = computeFrameSize(header);
 
     if (frameSize <= 0) {
-      throw new Error("Encountered frame with invalid size.");
+      offset += 1;
+      continue;
     }
 
     const nextOffset = offset + frameSize;
 
     if (nextOffset > bufferLength) {
-      throw new Error("Frame size exceeds buffer length.");
+      offset += 1;
+      continue;
     }
 
     frames.push({

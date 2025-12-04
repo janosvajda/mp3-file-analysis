@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/mp3-file-analysis.ts",
+  "context": {
+    "@aws-cdk/aws-apprunner-alpha:enableNewArnFormat": true
+  }
+}
