@@ -39,6 +39,7 @@ const EMPHASIS_OFFSET = 0;
 
 const MPEG_VERSION_1 = 0b11;
 const LAYER_III = 0b01;
+const FRAME_HEADER_BYTES = 4; // MPEG frame header length in bytes
 //@todo double check from http://www.mp3-tech.org/programmer/frame_header.html
 
 export type FrameHeader = {
@@ -56,9 +57,30 @@ export type FrameHeader = {
   channelModeName: "stereo" | "joint_stereo" | "dual_channel" | "single_channel";
 };
 
+/**
+ * Parses a 4-byte MPEG audio frame header at the given offset.
+ *
+ * The function:
+ *  - Ensures there are at least 4 bytes available in the buffer.
+ *  - Verifies the 11-bit frame sync is all ones.
+ *  - Extracts MPEG version, layer, bitrate index, sample rate index, padding,
+ *    protection bit, channel mode, mode extension, and emphasis.
+ *  - Currently only supports MPEG Version 1, Layer III frames.
+ *  - Looks up the actual bitrate (kbps) and sample rate (Hz) from the header indexes.
+ *
+ * Throws when:
+ *  - The header would run past the end of the buffer.
+ *  - The frame sync bits are invalid.
+ *  - The MPEG version or layer is unsupported.
+ *  - The bitrate or sample rate index is invalid.
+ *
+ * @param buffer The MP3 data buffer.
+ * @param offset Byte offset where the frame header starts.
+ * @returns A parsed `FrameHeader` object with both raw bits and derived values.
+ */
 export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   // @todo confirm 4-byte header read is always sufficient for MPEG1 Layer III frames?
-  if (offset + 4 > buffer.length) {
+  if (offset + FRAME_HEADER_BYTES > buffer.length) {
     throw new Error("Unexpected end of file while reading frame header.");
   }
 
@@ -110,5 +132,3 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
     channelModeName: getChannelMode(channelMode)
   };
 }
-
-// computeFrameSize is provided by helpers to avoid duplication.
