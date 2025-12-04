@@ -1,10 +1,14 @@
 import Fastify from "fastify";
 import multipart from "@fastify/multipart";
 import { constants as http2 } from "node:http2";
-import { countMp3Frames } from "./mp3";
+import { createFrameAnalyzer } from "./mp3";
 
 const server = Fastify({
   logger: true
+});
+
+const analyzer = createFrameAnalyzer({
+  info: (msg: string) => server.log.info(msg)
 });
 
 server.register(multipart, {
@@ -23,7 +27,7 @@ server.post("/file-upload", async (request, reply) => {
 
   try {
     const buffer = await file.toBuffer();
-    const frameCount = countMp3Frames(buffer);
+    const frameCount = analyzer.countMp3Frames(buffer);
 
     reply.code(http2.HTTP_STATUS_OK).header("Content-Type", "application/json");
     return { frameCount };

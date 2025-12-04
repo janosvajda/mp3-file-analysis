@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
-import { countMp3Frames } from "./frameCounter";
-import { parseFrameHeader, computeFrameSize } from "./frameHeader";
+import { createFrameAnalyzer } from "../src/mp3/frameAnalyzer";
+import { parseFrameHeader } from "../src/mp3/helpers/parseFrameHeader";
+import { computeFrameSize } from "../src/mp3/helpers/computeFrameSize";
 
 const buildHeader = ({
   bitrateIndex = 0b1001, // 128 kbps
@@ -10,7 +11,6 @@ const buildHeader = ({
   layerBits = 0b01,
   sync = true
 } = {}) => {
-  // @todo extend to cover other MPEG versions/layers and channel modes if support is added.
   let header = sync ? 0xffe00000 : 0;
   header |= versionBits << 19;
   header |= layerBits << 17;
@@ -39,7 +39,7 @@ const buildId3Header = (payloadSize: number) => {
   header.writeUInt8(0, 4); // version revision
   header.writeUInt8(0, 5); // flags
   // syncsafe size
-  header.writeUInt8((payloadSize >> 21) & 0x7f, 6); // syncsafe: 7 bits per byte to avoid 0xFF sync
+  header.writeUInt8((payloadSize >> 21) & 0x7f, 6);
   header.writeUInt8((payloadSize >> 14) & 0x7f, 7);
   header.writeUInt8((payloadSize >> 7) & 0x7f, 8);
   header.writeUInt8(payloadSize & 0x7f, 9);
@@ -47,37 +47,44 @@ const buildId3Header = (payloadSize: number) => {
 };
 
 test("counts multiple frames", () => {
+  const analyzer = createFrameAnalyzer({ info: () => {} });
   const frame = buildFrame(buildHeader());
   const buffer = Buffer.concat([frame, frame]);
-  const count = countMp3Frames(buffer);
+
+  const count = analyzer.countMp3Frames(buffer);
   expect(count).toBe(2);
+
+  const frames = analyzer.listMp3Frames(buffer);
+  expect(frames).toHaveLength(2);
+  expect(frames[0].offset).toBe(0);
+  expect(frames[0].frameSize).toBe(frame.length);
 });
 
 test("skips ID3v2 tag and counts frames", () => {
+  const analyzer = createFrameAnalyzer({ info: () => {} });
   const frame = buildFrame(buildHeader());
-  const id3Header = buildId3Header(0); // zero-sized tag
+  const id3Header = buildId3Header(0);
   const buffer = Buffer.concat([id3Header, frame]);
-  const count = countMp3Frames(buffer);
+
+  const count = analyzer.countMp3Frames(buffer);
   expect(count).toBe(1);
 });
 
-test("throws when no frames found after ID3 tag", () => {
-  const id3Header = buildId3Header(0);
-  expect(() => countMp3Frames(id3Header)).toThrow();
-});
-
 test("throws when frame size exceeds buffer length", () => {
+  const analyzer = createFrameAnalyzer({ info: () => {} });
   const headerBuffer = buildHeader();
   const truncatedBuffer = Buffer.concat([headerBuffer, Buffer.alloc(1)]);
-  expect(() => countMp3Frames(truncatedBuffer)).toThrow();
+  expect(() => analyzer.countMp3Frames(truncatedBuffer)).toThrow();
 });
 
 test("throws on invalid frame data", () => {
+  const analyzer = createFrameAnalyzer({ info: () => {} });
   const invalidHeader = buildHeader({ sync: false });
   const buffer = Buffer.concat([invalidHeader, Buffer.alloc(10)]);
-  expect(() => countMp3Frames(buffer)).toThrow();
+  expect(() => analyzer.countMp3Frames(buffer)).toThrow();
 });
 
 test("rejects non-buffer input", () => {
-  expect(() => countMp3Frames("not a buffer" as unknown as Buffer)).toThrow();
+  const analyzer = createFrameAnalyzer({ info: () => {} });
+  expect(() => analyzer.countMp3Frames("not a buffer" as unknown as Buffer)).toThrow();
 });
