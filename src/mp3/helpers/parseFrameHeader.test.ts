@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
-import { computeFrameSize, parseFrameHeader } from "./frameHeader";
+import { parseFrameHeader } from "./parseFrameHeader";
+import { computeFrameSize } from "./computeFrameSize";
 
 //@todo this might not be correct yet, needs to be checked in docs, this whole mp3 thing is a big mess
 const buildHeader = ({

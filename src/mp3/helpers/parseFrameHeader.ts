@@ -1,3 +1,5 @@
+import { getChannelMode } from "./getChannelMode";
+
 const BITRATE_INDEXES: Array<number | null> = [
   null, // free
   32,
@@ -27,20 +29,31 @@ const SAMPLE_RATE_INDEXES: Array<number | null> = [
 const FRAME_SYNC_MASK = 0xffe00000 >>> 0;
 const MPEG_VERSION_OFFSET = 19;
 const LAYER_OFFSET = 17;
+const PROTECTION_BIT_OFFSET = 16;
 const BITRATE_INDEX_OFFSET = 12;
 const SAMPLE_RATE_INDEX_OFFSET = 10;
 const PADDING_BIT_OFFSET = 9;
+const CHANNEL_MODE_OFFSET = 6;
+const MODE_EXTENSION_OFFSET = 4;
+const EMPHASIS_OFFSET = 0;
 
 const MPEG_VERSION_1 = 0b11;
 const LAYER_III = 0b01;
-// MPEG-1 Layer III frame size uses a 144000 coefficient (144 * 1000) when bitrate is in kbps.
-const FRAME_SIZE_COEFFICIENT = 144000;
-
 //@todo double check from http://www.mp3-tech.org/programmer/frame_header.html
+
 export type FrameHeader = {
   bitrateKbps: number;
   sampleRate: number;
   padding: number;
+  bitrateIndex: number;
+  sampleRateIndex: number;
+  versionBits: number;
+  layerBits: number;
+  protectionBit: number;
+  channelMode: number;
+  modeExtension: number;
+  emphasis: number;
+  channelModeName: "stereo" | "joint_stereo" | "dual_channel" | "single_channel";
 };
 
 export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
@@ -52,7 +65,7 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   const header = buffer.readUInt32BE(offset);
 
   // Frame sync (first 11 bits) must be all ones.
-  if (((header & FRAME_SYNC_MASK) >>> 0) !== FRAME_SYNC_MASK) {
+  if ((header & FRAME_SYNC_MASK) >>> 0 !== FRAME_SYNC_MASK) {
     throw new Error("Invalid frame sync.");
   }
 
@@ -70,22 +83,32 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   const bitrateIndex = (header >>> BITRATE_INDEX_OFFSET) & 0xf;
   const sampleRateIndex = (header >>> SAMPLE_RATE_INDEX_OFFSET) & 0x3;
   const paddingBit = (header >>> PADDING_BIT_OFFSET) & 0x1;
+  const protectionBit = (header >>> PROTECTION_BIT_OFFSET) & 0x1;
+  const channelMode = (header >>> CHANNEL_MODE_OFFSET) & 0x3;
+  const modeExtension = (header >>> MODE_EXTENSION_OFFSET) & 0x3;
+  const emphasis = (header >>> EMPHASIS_OFFSET) & 0x3;
 
   const bitrateKbps = BITRATE_INDEXES[bitrateIndex];
   const sampleRate = SAMPLE_RATE_INDEXES[sampleRateIndex];
 
-  if (!bitrateKbps || !sampleRate) {
+  if (bitrateKbps == null || sampleRate == null) {
     throw new Error("Invalid bitrate or sample rate in frame header.");
   }
 
   return {
     bitrateKbps,
     sampleRate,
-    padding: paddingBit
+    padding: paddingBit,
+    bitrateIndex,
+    sampleRateIndex,
+    versionBits,
+    layerBits,
+    protectionBit,
+    channelMode,
+    modeExtension,
+    emphasis,
+    channelModeName: getChannelMode(channelMode)
   };
 }
 
-export function computeFrameSize({ bitrateKbps, sampleRate, padding }: FrameHeader): number {
-  // Formula for MPEG1 Layer III frame size: floor((144000 * bitrate) / sampleRate) + padding
-  return Math.floor((FRAME_SIZE_COEFFICIENT * bitrateKbps) / sampleRate) + padding;
-}
+// computeFrameSize is provided by helpers to avoid duplication.
