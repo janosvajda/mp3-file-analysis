@@ -1,0 +1,42 @@
+{
+  "info": {
+    "_postman_id": "b4f19919-7dd8-4c0b-9d3e-d53c6c349e6d",
+    "name": "MP3 File Analysis",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload MP3",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "{{sampleFile}}"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/file-upload",
+          "host": ["{{baseUrl}}"],
+          "path": ["file-upload"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "sampleFile",
+      "value": ""
+    }
+  ]
+}

@@ -4,6 +4,11 @@ Speedy and tiny API that accepts an MP3 upload at `/file-upload` and responds wi
 
 ## Setup
 
+1) Copy the env template and edit values as needed:
+```bash
+cp .env.example .env
+```
+2) Install deps and start the server:
 ```bash
 npm install
 npm run dev   # start with tsx watch
@@ -17,11 +22,17 @@ npm run build && npm start
 - Success response: `{"frameCount": <number>}`
 - Error response (400): `{"error": "<reason>"}`
 
-Example:
+Examples:
 
-```bash
-curl -F "file=@samples/sample.mp3" http://localhost:3000/file-upload
-```
+- Postman: POST `http://localhost:3000/file-upload`, Body → form-data, add one `file` field of type File, pick an MP3, send; expect `{"frameCount": <number>}`.
+- Curl (sample): `curl -F "file=@samples/sample.mp3" http://localhost:3000/file-upload`
+- Curl (explicit content-type): `curl -X POST -H "Content-Type: multipart/form-data" -F "file=@samples/SoundHelix-Song-1.mp3" http://localhost:3000/file-upload`
+- Curl (no file, expect 400): `curl -X POST http://localhost:3000/file-upload`
+
+## Postman
+Import `postman/MP3 File Analysis.postman_collection.json` and set:
+- `baseUrl` (e.g., `http://localhost:3000`)
+- `sampleFile` pointing to a local MP3
 
 ## Tests
 
@@ -55,6 +66,22 @@ A: sync (11)   B: version (2)  C: layer (2)   D: protection (1)
 E: bitrate (4) F: sample rate (2) G: padding (1) H: private (1)
 I: channel mode (2) J: mode ext (2) K: copyright (1) L: original (1) M: emphasis (2)
 ```
+
+
+## Scripts (package.json)
+- `npm run dev` – start Fastify in watch mode via tsx.
+- `npm run build` – type-check/compile with TypeScript.
+- `npm start` – run the compiled server from dist.
+- `npm test` – run Vitest suite (unit + integration).
+- `npm run lint` – ESLint with TypeScript config.
+- `npm run format` – Prettier format all files.
+
+## CI
+GitHub Actions workflow `.github/workflows/pull-request.yml` runs on pull requests:
+- Node matrix: 20, 22
+- `npm ci`
+- `npm run build -- --noEmit` (type check)
+- `npm test`
 
 ## Tasks / Future Work
 
