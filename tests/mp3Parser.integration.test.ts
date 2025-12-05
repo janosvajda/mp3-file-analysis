@@ -145,15 +145,25 @@ const expectedByFile: Record<string, FrameExpectation> = {
     last: { frameIndex: 14267, headerSize: 4, frameSize: 627 }
   },
   "sample_mp3_3_minutes.mp3": {
-    count: 6892,
-    first: { frameIndex: 0, headerSize: 4, frameSize: 1044 },
-    last: { frameIndex: 6891, headerSize: 4, frameSize: 1045 }
+    count: 6891,
+    first: { frameIndex: 0, headerSize: 4, frameSize: 1045 },
+    last: { frameIndex: 6890, headerSize: 4, frameSize: 1045 }
+  },
+  "tiny2frames.mp3": {
+    count: 3,
+    first: { frameIndex: 0, headerSize: 4, frameSize: 208 },
+    last: { frameIndex: 2, headerSize: 4, frameSize: 209 }
+  },
+  "TruncatedMp3.mp3": {
+    count: 7,
+    first: { frameIndex: 0, headerSize: 4, frameSize: 626 },
+    last: { frameIndex: 6, headerSize: 4, frameSize: 627 }
   },
   "sample3.mp2": {
     // This is an MPEG Layer II file and should be rejected by the analyzer.
     expectInvalid: true
   }
-};
+}; 
 
 test(
   "optionally validates real sample file(s) against MediaInfo expectations",

@@ -7,7 +7,9 @@
     "cdk": "cdk",
     "synth": "cdk synth",
     "deploy": "cdk deploy",
-    "diff": "cdk diff"
+    "diff": "cdk diff",
+    "test": "vitest run",
+    "snapshot:update": "vitest run test/mp3-file-analysis-stack.test.ts --update --passWithNoTests"
   },
   "dependencies": {
     "@aws-cdk/aws-apprunner-alpha": "^2.166.0-alpha.0",
