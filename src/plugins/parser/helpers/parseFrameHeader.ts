@@ -197,9 +197,8 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
 
   // Only Layer III is supported by this parser.
   // @todo It also worked with mp2, it counted its frames
-  // but I was not sure wether it was ok or not as Medianfo did not support that mp2,
+  // but I was not sure wether it was ok or not as Medianfo did not support that mp2 I found,
   // therefore I do not support it now.
-  // I found on the internet....
   if (!isLayer3) {
     throw new Error("Unsupported MPEG version or layer.");
   }

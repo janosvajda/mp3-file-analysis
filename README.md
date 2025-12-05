@@ -74,7 +74,7 @@ Second terminal window (got to the dir where the project is checkouted):
 
 - Upload: `curl -F "file=@samples/SoundHelix-Song-1.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
 - Upload with different sample: `curl -F "file=@samples/tiny2frames.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
-- No file uploaddd (expect 400): `curl -X POST http://localhost:3000/file-upload`
+- No file upload (expect 400): `curl -X POST http://localhost:3000/file-upload`
 
 - If the file is bigger than the limit: HTTP 400 {"error":"File too large."}
 - Invalid mp3 file: HTTP 400 {"error":"Invalid MP3 file content."}
