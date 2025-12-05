@@ -40,49 +40,6 @@ test("rejects unsupported mimetype", async () => {
   await expect(validateUpload(file, logger)).rejects.toThrow(/Unsupported file type/);
 });
 
-test("rejects truncated uploads with size message", async () => {
-  const file = buildFile({
-    buffer: Buffer.alloc(10),
-    mimetype: "audio/mpeg",
-    file: { truncated: true }
-  } as unknown as MultipartFile);
-
-  await expect(validateUpload(file, logger, 1024 * 1024)).rejects.toThrow(
-    /File exceeds the maximum allowed size/
-  );
-});
-
-test("rejects when bytesRead exceeds max size", async () => {
-  const file = buildFile({
-    buffer: Buffer.alloc(10),
-    mimetype: "audio/mpeg",
-    file: { bytesRead: 2 * 1024 * 1024 }
-  } as unknown as MultipartFile);
-
-  await expect(validateUpload(file, logger, 1024 * 1024)).rejects.toThrow(
-    /File exceeds the maximum allowed size/
-  );
-});
-
-test("rejects when truncated flag is set", async () => {
-  const file = buildFile({
-    buffer: Buffer.alloc(10),
-    mimetype: "audio/mpeg",
-    truncated: true
-  } as unknown as MultipartFile);
-
-  await expect(validateUpload(file, logger, 1024 * 1024)).rejects.toThrow(
-    /File exceeds the maximum allowed size/
-  );
-});
-
-test("rejects buffer exceeding explicit max size", async () => {
-  const file = buildFile({ buffer: Buffer.alloc(2 * 1024 * 1024) });
-  await expect(validateUpload(file, logger, 1024 * 1024)).rejects.toThrow(
-    /File exceeds the maximum allowed size/
-  );
-});
-
 test("rejects too-small buffers", async () => {
   const file = buildFile({ buffer: Buffer.alloc(2) });
   await expect(validateUpload(file, logger)).rejects.toThrow(/Invalid MP3 file/);

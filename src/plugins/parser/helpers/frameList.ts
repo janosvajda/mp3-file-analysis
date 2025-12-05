@@ -10,28 +10,21 @@ export type FrameInfo = {
   dataSize: number;
 };
 
-const FRAME_HEADER_BYTES = 4;
+/**
+ * MPEG frame headers are always 4 bytes long.
+ */
+const MP3_FRAME_HEADER_BYTES = 4;
 
 /**
- * Produces a list of all MPEG audio frames in an MP3 buffer.
+ * Produces a list of contiguous MPEG audio frames in an MP3 buffer.
  *
- * This function:
- *  - Skips any ID3v2 tag at the beginning of the file.
- *  - Reads each following MPEG frame header.
- *  - Computes the full frame size.
- *  - Validates that the frame fits within the buffer.
- *  - Records the frame's offset, total size, header size, and payload size.
- *  - Logs each frame as it is encountered.
+ * Steps performed:
+ *  1. Detect and skip the ID3v2 metadata block.
+ *  2. Scan forward through the buffer, byte-by-byte, until the first valid frame is found.
+ *  3. After the first frame, require subsequent frames to be contiguous. Stop scanning on
+ *     the first invalid boundary.
  *
- * Errors are thrown when:
- *  - The input is not a Buffer.
- *  - A frame reports a non-positive size.
- *  - A frame claims to extend beyond the buffer.
- *  - No frames are found after the ID3 tag.
- *
- * @param buffer The MP3 data.
- * @param logger Logger for diagnostic output.
- * @returns A list of frame metadata.
+ * @throws Error if input is not a Buffer or no valid contiguous frames are detected.
  */
 export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
   if (!Buffer.isBuffer(buffer)) {
@@ -39,50 +32,87 @@ export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
   }
 
   const frames: FrameInfo[] = [];
+
+  /**
+   * ID3v2 tags appear at the start of many MP3 files.
+   * They contain metadata, not audio. Their size is encoded
+   * in the first 10 bytes, and this function returns the number
+   * of bytes to skip before real MPEG frames begin.
+   */
   const id3Size = parseId3v2TagSize(buffer);
   logger.info(`ID3 tag size: ${id3Size} bytes`);
 
-  const headerSize = FRAME_HEADER_BYTES;
+  const headerSize = MP3_FRAME_HEADER_BYTES;
   const bufferLength = buffer.length;
 
   let offset = id3Size;
+  let foundFirstFrame = false;
+  let resynced = false;
 
+  // Find the first frame.
   while (offset + headerSize <= bufferLength) {
-    let header;
     try {
-      header = parseFrameHeader(buffer, offset);
+      const header = parseFrameHeader(buffer, offset);
+      const frameSize = computeFrameSize(header);
+
+      if (frameSize <= 0 || offset + frameSize > bufferLength) {
+        throw new Error("Invalid frame size.");
+      }
+
+      frames.push({
+        offset,
+        frameSize,
+        headerSize,
+        dataSize: frameSize - headerSize
+      });
+
+      logger.info(
+        `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
+      );
+
+      offset += frameSize;
+      foundFirstFrame = true;
+      break;
     } catch {
+      resynced = true;
       offset += 1;
-      continue;
     }
-    const frameSize = computeFrameSize(header);
-
-    if (frameSize <= 0) {
-      offset += 1;
-      continue;
-    }
-
-    const nextOffset = offset + frameSize;
-
-    if (nextOffset > bufferLength) {
-      offset += 1;
-      continue;
-    }
-
-    frames.push({
-      offset,
-      frameSize,
-      headerSize,
-      dataSize: frameSize - headerSize
-    });
-
-    logger.info(`Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`);
-
-    offset = nextOffset;
   }
 
-  if (frames.length === 0) {
-    throw new Error("No frames detected in MP3 file.");
+  if (!foundFirstFrame) {
+    throw new Error("No valid MPEG frames detected in MP3 file.");
+  }
+
+  // Collect contiguous frames after the first one.
+  while (offset + headerSize <= bufferLength) {
+    try {
+      const header = parseFrameHeader(buffer, offset);
+      const frameSize = computeFrameSize(header);
+
+      if (frameSize <= 0 || offset + frameSize > bufferLength) {
+        break;
+      }
+
+      frames.push({
+        offset,
+        frameSize,
+        headerSize,
+        dataSize: frameSize - headerSize
+      });
+
+      logger.info(
+        `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
+      );
+
+      offset += frameSize;
+    } catch {
+      break;
+    }
+  }
+
+  const minFrames = resynced ? 2 : 1;
+  if (frames.length < minFrames) {
+    throw new Error("No valid MPEG frames detected in MP3 file.");
   }
 
   return frames;

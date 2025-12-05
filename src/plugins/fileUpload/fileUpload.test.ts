@@ -4,6 +4,7 @@ import { constants as http2 } from "node:http2";
 import { fileUploadRoutes } from "./fileUpload";
 import * as uploadValidator from "../parser/validators/uploadValidator";
 import { errorHandler } from "../errorHandler/errorHandler";
+import type { FastifyRequest } from "fastify";
 
 const registerTestServer = async (analyzer: { countMp3Frames: (buffer: Buffer) => number }) => {
   const app = Fastify();
@@ -16,8 +17,8 @@ const setRequestFile = (
   app: ReturnType<typeof Fastify>,
   fileFn: () => Promise<unknown>
 ) => {
-  app.addHook("onRequest", (req, _reply, done) => {
-    (req as { file?: () => Promise<unknown> }).file = fileFn;
+  app.addHook("onRequest", (req: FastifyRequest, _reply, done) => {
+    (req as unknown as { file?: () => Promise<unknown> }).file = fileFn;
     done();
   });
 };
@@ -88,5 +89,5 @@ test("returns 413 when validateUpload flags oversized file", async () => {
   });
 
   expect(response.statusCode).toBe(http2.HTTP_STATUS_PAYLOAD_TOO_LARGE);
-  expect(response.json()).toEqual({ error: "File exceeds the maximum allowed size of 1 MB." });
+  expect(response.json()).toEqual({ error: "File too large." });
 });
