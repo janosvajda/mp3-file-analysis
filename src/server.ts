@@ -46,7 +46,7 @@ export function buildServer(
     }
   });
 
-  server.register(errorHandler, { maxFileSizeBytes: MAX_FILE_SIZE_BYTES });
+  server.register(errorHandler);
   server.register(fileUploadRoutes, { analyzer, maxFileSizeBytes: MAX_FILE_SIZE_BYTES });
 
   return server;
