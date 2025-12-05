@@ -13,8 +13,7 @@ describe("Mp3FileAnalysisStack", () => {
     // Normalize volatile image hashes to keep snapshot stable.
     const resources = (template.Resources ?? {}) as Record<string, Record<string, unknown>>;
     for (const resource of Object.values(resources)) {
-      const imageRepo =
-        resource?.Properties?.SourceConfiguration?.ImageRepository ?? null;
+      const imageRepo = resource?.Properties?.SourceConfiguration?.ImageRepository ?? null;
       if (imageRepo?.ImageIdentifier) {
         imageRepo.ImageIdentifier = "<IMAGE_HASH>";
       }

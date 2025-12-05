@@ -15,7 +15,11 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "keywords": ["mp3", "mp3 frame", "MP3"],
+  "keywords": [
+    "mp3",
+    "mp3 frame",
+    "MP3"
+  ],
   "author": "Janos Vajda",
   "license": "ISC",
   "dependencies": {

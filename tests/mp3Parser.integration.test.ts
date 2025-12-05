@@ -72,14 +72,10 @@ describe("frame analyzer – synthetic buffers", () => {
 
     // MPEG-1 Layer III frame size formula:
     //   floor(144000 * bitrate_kbps / sampleRate) + padding
-    const frameSize =
-      Math.floor((144000 * bitrateKbps) / sampleRate) + padding;
+    const frameSize = Math.floor((144000 * bitrateKbps) / sampleRate) + padding;
 
     // Construct a single frame: 4-byte header + payload.
-    const frame = Buffer.concat([
-      header,
-      Buffer.alloc(frameSize - header.length, 0)
-    ]);
+    const frame = Buffer.concat([header, Buffer.alloc(frameSize - header.length, 0)]);
 
     // Two identical frames back-to-back.
     const syntheticFile = Buffer.concat([frame, frame]);
@@ -97,9 +93,7 @@ describe("frame analyzer – synthetic buffers", () => {
     expect(() => analyzer.countMp3Frames(Buffer.from([]))).toThrow();
 
     // Random bytes: invalid frame sync / header.
-    expect(() =>
-      analyzer.countMp3Frames(Buffer.from([0x00, 0x01, 0x02, 0x03]))
-    ).toThrow();
+    expect(() => analyzer.countMp3Frames(Buffer.from([0x00, 0x01, 0x02, 0x03]))).toThrow();
   });
 });
 
@@ -116,9 +110,7 @@ const samplesDir = path.join(process.cwd(), "samples");
 
 const sampleFiles =
   fs.existsSync(samplesDir) && fs.statSync(samplesDir).isDirectory()
-    ? fs
-        .readdirSync(samplesDir)
-        .filter((file) => file.toLowerCase().endsWith(".mp3"))
+    ? fs.readdirSync(samplesDir).filter((file) => file.toLowerCase().endsWith(".mp3"))
     : [];
 
 // Values below are taken from MediaInfo output for the sample files.
@@ -163,7 +155,7 @@ const expectedByFile: Record<string, FrameExpectation> = {
     // This is an MPEG Layer II file and should be rejected by the analyzer.
     expectInvalid: true
   }
-}; 
+};
 
 test(
   "optionally validates real sample file(s) against MediaInfo expectations",
@@ -186,9 +178,7 @@ test(
       const frames = analyzer.listMp3Frames(sampleBuffer);
 
       expect(frameCount).toBeGreaterThan(0);
-      console.log(
-        `Sample (${path.basename(samplePath)}) frame count: ${frameCount}`
-      );
+      console.log(`Sample (${path.basename(samplePath)}) frame count: ${frameCount}`);
 
       // When we have MediaInfo expectations, assert frame count and last index.
       if (expectation) {
@@ -220,9 +210,7 @@ test(
         const header = parseFrameHeader(sampleBuffer, frame.offset);
 
         console.log(
-          `  ${label} frame: offset=${frame.offset
-            .toString(16)
-            .padStart(6, "0")} ` +
+          `  ${label} frame: offset=${frame.offset.toString(16).padStart(6, "0")} ` +
             `size=${frame.frameSize} bytes (header=${frame.headerSize} data=${frame.dataSize}) ` +
             `(bitrate=${header.bitrateKbps}kbps sr=${header.sampleRate}Hz ` +
             `padding=${header.padding} mode=${header.channelModeName})`

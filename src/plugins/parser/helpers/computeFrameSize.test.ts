@@ -61,9 +61,7 @@ describe("computeFrameSize", () => {
       mpegVersion: 1
     });
 
-    const expected =
-      Math.floor((FRAME_SIZE_COEFFICIENT * bitrateKbps) / sampleRate) +
-      padding;
+    const expected = Math.floor((FRAME_SIZE_COEFFICIENT * bitrateKbps) / sampleRate) + padding;
 
     expect(size).toBe(expected);
   });
@@ -80,9 +78,7 @@ describe("computeFrameSize", () => {
       mpegVersion: 1
     });
 
-    const expected =
-      Math.floor((FRAME_SIZE_COEFFICIENT * bitrateKbps) / sampleRate) +
-      padding;
+    const expected = Math.floor((FRAME_SIZE_COEFFICIENT * bitrateKbps) / sampleRate) + padding;
 
     expect(size).toBe(expected);
   });
@@ -116,8 +112,7 @@ describe("computeFrameSize", () => {
     });
 
     const expected =
-      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) +
-      padding;
+      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) + padding;
 
     expect(size).toBe(expected);
   });
@@ -135,8 +130,7 @@ describe("computeFrameSize", () => {
     });
 
     const expected =
-      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) +
-      padding;
+      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) + padding;
 
     expect(size).toBe(expected);
   });
@@ -154,8 +148,7 @@ describe("computeFrameSize", () => {
     });
 
     const expected =
-      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) +
-      padding;
+      Math.floor((FRAME_SIZE_COEFFICIENT_MPEG2 * bitrateKbps) / sampleRate) + padding;
 
     expect(size).toBe(expected);
   });
