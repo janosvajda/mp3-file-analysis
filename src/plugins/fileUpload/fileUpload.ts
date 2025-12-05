@@ -24,7 +24,13 @@ const {
 export const fileUploadRoutes = fp<FileUploadPluginOptions>(
   (server: FastifyInstance, { analyzer, maxFileSizeBytes }) => {
     server.post("/file-upload", async (request, reply) => {
-      const file = await request.file();
+      let file;
+      try {
+        file = await request.file();
+      } catch (err) {
+        request.log.warn({ err }, "Failed to parse multipart upload");
+        throw new MpAnalyseError("No file uploaded.");
+      }
 
       if (!file) {
         request.log.warn("No file provided in /file-upload");

@@ -30,6 +30,11 @@ npm run build && npm start
 - You can drop additional MP3s into `samples/` and wire them into the expectation map in that test to validate against MediaInfo values.
 - Root `npm test` only runs the main app suite (deploy tests live in the `deploy/` package).
 
+
+## Logging
+
+App uses and extends Fastify logger and logs warnings, infos and errors in terminal.
+
 ## Endpoint
 
 - `POST /file-upload` with `multipart/form-data` and a single MP3 file field.
@@ -37,13 +42,16 @@ npm run build && npm start
 - Error response (400): `{"error": "<reason>"}`
 - Error response (500): `Unexpected error`
 
-## How to manual test locally
+## How to manual test locally and responses
 
 Examples (curl):
 
 - Upload: `curl -F "file=@samples/SoundHelix-Song-1.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
 - Upload with different sample: `curl -F "file=@samples/tiny2frames.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
-- No file (expect 400): `curl -X POST http://localhost:3000/file-upload`
+- No file uploaddd (expect 400): `curl -X POST http://localhost:3000/file-upload`
+
+- If the file is bigger than the limit: HTTP 400 {"error":"File too large."}
+- Invalid mp3 file: HTTP 400 {"error":"Invalid MP3 file content."}
 
 Postman: import `postman/MP3 File Analysis.postman_collection.json` and set:
 - `baseUrl` (e.g., `http://localhost:3000`)
@@ -86,6 +94,7 @@ GitHub Actions workflow `.github/workflows/pull-request.yml` runs on pull reques
 - Support big files (streaming, s3 )
 - Adding caching
 - Adding virus/malware scanning if this was a production used service
+- Adding OpenAPI
 
 ## Deploy (CDK) --- not tested yet, please do not deploy it :)
 
