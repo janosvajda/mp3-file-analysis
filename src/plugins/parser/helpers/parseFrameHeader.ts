@@ -208,7 +208,6 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   const channelMode = (header >>> CHANNEL_MODE_OFFSET) & 0b11;
   const modeExtension = (header >>> MODE_EXTENSION_OFFSET) & 0b11;
   const emphasis = (header >>> EMPHASIS_OFFSET) & 0b11;
-
   // Choose appropriate bitrate table based on MPEG version.
   const bitrateTable =
     mpegVersion === 1 ? BITRATE_INDEXES_MPEG1_LAYER3 : BITRATE_INDEXES_MPEG2_LAYER3;
@@ -227,7 +226,7 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
     throw new Error("Invalid bitrate or sample rate in frame header.");
   }
 
-  return {
+ return {
     bitrateKbps,
     sampleRate,
     padding: paddingBit,

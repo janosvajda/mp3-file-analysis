@@ -16,56 +16,46 @@ npm run dev   # start with tsx watch
 npm run build && npm start
 ```
 
+## Local commands (root package.json)
+- `npm run dev` – start Fastify in watch mode via tsx.
+- `npm run build` – type-check/compile with TypeScript.
+- `npm start` – run the compiled server from `dist`.
+- `npm test` – run Vitest suite (unit + integration).
+- `npm run lint` – ESLint with TypeScript config.
+- `npm run format` – Prettier format all files.
+
+## Samples and integration tests
+- Sample MP3/MP2 files live in `samples/`.
+- `tests/mp3Parser.integration.test.ts` exercises the parser against known-good (and known-bad) samples and asserts exact frame counts (e.g., SoundHelix, 3‑minute sample, tiny 2‑frame file, truncated files, and invalid `.mp2`).
+- You can drop additional MP3s into `samples/` and wire them into the expectation map in that test to validate against MediaInfo values.
+- Root `npm test` only runs the main app suite (deploy tests live in the `deploy/` package).
+
 ## Endpoint
 
 - `POST /file-upload` with `multipart/form-data` and a single MP3 file field.
 - Success response: `{"frameCount": <number>}`
 - Error response (400): `{"error": "<reason>"}`
+- Error response (500): `Unexpected error`
 
-Examples:
+## How to manual test locally
 
-- Postman: POST `http://localhost:3000/file-upload`, Body → form-data, add one `file` field of type File, pick an MP3, send; expect `{"frameCount": <number>}`.
-- Curl (sample): `curl -F "file=@samples/sample.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
-- Curl (explicit content-type): `curl -F "file=@samples/SoundHelix-Song-1.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
-- Curl (no file, expect 400): `curl -X POST http://localhost:3000/file-upload`
+Examples (curl):
 
-## Postman
-Import `postman/MP3 File Analysis.postman_collection.json` and set:
+- Upload: `curl -F "file=@samples/SoundHelix-Song-1.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
+- Upload with different sample: `curl -F "file=@samples/tiny2frames.mp3;type=audio/mpeg" http://localhost:3000/file-upload`
+- No file (expect 400): `curl -X POST http://localhost:3000/file-upload`
+
+Postman: import `postman/MP3 File Analysis.postman_collection.json` and set:
 - `baseUrl` (e.g., `http://localhost:3000`)
 - `sampleFile` pointing to a local MP3
 
-## Tests
+## Running automated tests -- it runs all unit and integration tests in root directory
 
 ```bash
 npm test
 ```
 
-Tests include a synthetic frame counter check. If you place a real sample at `samples/sample.mp3`, the test will also verify it returns a positive frame count.
-
-## MP3 Frame Header (MPEG-1 Layer III)
-
-- 4 bytes total; starts with 11-bit sync `11111111111`.
-- Key fields:
-  - Version (2 bits): `11` = MPEG Version 1 (supported).
-  - Layer (2 bits): `01` = Layer III (supported).
-  - Protection bit (1): `1` = no CRC in this implementation.
-  - Bitrate index (4): maps to kbps (`free`/`bad` values rejected).
-  - Sample rate index (2): 44.1/48/32 kHz (`reserved` rejected).
-  - Padding (1): adds 1 byte to frame size when set.
-  - Channel mode (2): parsed but not used in sizing here.
-- Frame size formula (MPEG-1 Layer III): `floor((144000 * bitrateKbps) / sampleRate) + padding`.
-- References:
-  - http://www.mp3-tech.org/programmer/frame_header.html (field summary)
-  - https://www.datavoyage.com/mpgscript/mpeghdr.htm (public breakdown of MPEG audio frame headers)
-
-Tiny ASCII view of the 32-bit header layout (MSB → LSB):
-
-```
-AAAAAAAA AAABBCCD EEEEFFGH IIJJKLMM
-A: sync (11)   B: version (2)  C: layer (2)   D: protection (1)
-E: bitrate (4) F: sample rate (2) G: padding (1) H: private (1)
-I: channel mode (2) J: mode ext (2) K: copyright (1) L: original (1) M: emphasis (2)
-```
+Tests cover parser helpers, upload plugin, error handling, server wiring, and integration against the sample audio files. Deploy-layer tests live under `deploy/` and are opt-in.
 
 
 ## Scripts (package.json)
@@ -77,16 +67,37 @@ I: channel mode (2) J: mode ext (2) K: copyright (1) L: original (1) M: emphasis
 - `npm run format` – Prettier format all files.
 
 ## CI
+In .github directory there is a PR validation. It is simple, it runs linter and all tests on the PR and fails if something is bad. 
+
 GitHub Actions workflow `.github/workflows/pull-request.yml` runs on pull requests:
 - Node matrix: 20, 22
 - `npm ci`
 - `npm run build -- --noEmit` (type check)
 - `npm test`
 
-## Tasks / Future Work
+## Notes
+- App is fully tested (unit + integration) and documented in this README, inline comments, and Postman collection.
+- Samples are versioned alongside tests to guard against regressions in parsing/counting.
 
-- Exercise the parser against a wider variety of MP3s produced by different encoders/tools to harden validation.
-- Make upload handling more flexible: configurable field name, allowed mime types, and tightened size limits.
-- Add more error detail/typing for client responses (e.g., distinguish unsupported format vs. corrupt file).
-- Consider reporting additional metadata (duration estimate, bitrate mode) if needed.
-- Add CI to run tests/build on pushes; optional lint/format steps.
+## Remaining Tasks / Future Work
+
+- Exercise the parser against a more wider variety of MP3s produced by different encoders/tools to harden validation.
+- Succesfully deploy it to AWS, and might create a lambda + s3 and some messaging solution for huge files.
+- Support big files (streaming, s3 )
+- Adding caching
+- Adding virus/malware scanning if this was a production used service
+
+## Deploy (CDK) --- not tested yet, please do not deploy it :)
+
+- The content of deploy directory is only for me. Later I want to deploy it to my personal AWS account, this part in deploy directory has not been tested/deployed yet. I mention it to Readme, avoiding the confusions.
+
+- CDK app lives in `deploy/` (separate package.json).
+- Install deps there with `npm install` (inside `deploy/`), then:
+  - `npm run synth` – synthesize the stack
+  - `npm run diff` – compare against deployed stack
+  - `npm run deploy` – deploy
+  - `npm run test` – Vitest snapshot test for the stack template
+  - `npm run snapshot:update` – update the stack snapshot
+- Main stack file: `deploy/lib/mp3-file-analysis-stack.ts`
+- Snapshot test: `deploy/test/mp3-file-analysis-stack.test.ts`
+

@@ -1,8 +1,8 @@
 import { constants as http2 } from "node:http2";
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
-import { validateUpload } from "../parser/validators/uploadValidator";
 import { MpAnalyseError, isFileTooLargeError } from "../errorHandler/errorHandler";
+import { validateUpload } from "./validators/uploadValidator";
 
 type Analyzer = {
   countMp3Frames: (buffer: Buffer) => number;

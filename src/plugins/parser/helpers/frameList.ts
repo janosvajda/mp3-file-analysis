@@ -14,6 +14,28 @@ export type FrameInfo = {
  * MPEG frame headers are always 4 bytes long.
  */
 const MP3_FRAME_HEADER_BYTES = 4;
+const XING_MAGIC = Buffer.from("Xing");
+const INFO_MAGIC = Buffer.from("Info");
+
+const sideInfoSize = (mpegVersion: number, channelMode: number): number => {
+  if (mpegVersion === 1) {
+    return channelMode === 3 ? 17 : 32; // mono vs stereo
+  }
+  return channelMode === 3 ? 9 : 17; // MPEG 2/2.5
+};
+
+const isMetadataFrame = (
+  buffer: Buffer,
+  frameOffset: number,
+  header: { mpegVersion: number; channelMode: number }
+): boolean => {
+  const offset =
+    frameOffset +
+    MP3_FRAME_HEADER_BYTES +
+    sideInfoSize(header.mpegVersion, header.channelMode);
+  const magic = buffer.subarray(offset, offset + 4);
+  return magic.equals(XING_MAGIC) || magic.equals(INFO_MAGIC);
+};
 
 /**
  * Produces a list of contiguous MPEG audio frames in an MP3 buffer.
@@ -49,7 +71,7 @@ export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
   let foundFirstFrame = false;
   let resynced = false;
 
-  // Find the first frame.
+  // Scan the entire buffer, resyncing when an invalid boundary is encountered.
   while (offset + headerSize <= bufferLength) {
     try {
       const header = parseFrameHeader(buffer, offset);
@@ -59,59 +81,35 @@ export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
         throw new Error("Invalid frame size.");
       }
 
-      frames.push({
-        offset,
-        frameSize,
-        headerSize,
-        dataSize: frameSize - headerSize
-      });
+      const metadataFrame = isMetadataFrame(buffer, offset, header);
 
-      logger.info(
-        `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
-      );
+      if (!metadataFrame) {
+        frames.push({
+          offset,
+          frameSize,
+          headerSize,
+          dataSize: frameSize - headerSize
+        });
+
+        logger.info(
+          `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
+        );
+
+        foundFirstFrame = true;
+      }
 
       offset += frameSize;
-      foundFirstFrame = true;
-      break;
+      continue;
     } catch {
-      resynced = true;
+      if (!foundFirstFrame) {
+        resynced = true;
+      }
       offset += 1;
     }
   }
 
-  if (!foundFirstFrame) {
-    throw new Error("No valid MPEG frames detected in MP3 file.");
-  }
-
-  // Collect contiguous frames after the first one.
-  while (offset + headerSize <= bufferLength) {
-    try {
-      const header = parseFrameHeader(buffer, offset);
-      const frameSize = computeFrameSize(header);
-
-      if (frameSize <= 0 || offset + frameSize > bufferLength) {
-        break;
-      }
-
-      frames.push({
-        offset,
-        frameSize,
-        headerSize,
-        dataSize: frameSize - headerSize
-      });
-
-      logger.info(
-        `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
-      );
-
-      offset += frameSize;
-    } catch {
-      break;
-    }
-  }
-
   const minFrames = resynced ? 2 : 1;
-  if (frames.length < minFrames) {
+  if (!foundFirstFrame || frames.length < minFrames) {
     throw new Error("No valid MPEG frames detected in MP3 file.");
   }
 

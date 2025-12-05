@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import Fastify from "fastify";
 import { constants as http2 } from "node:http2";
 import { fileUploadRoutes } from "./fileUpload";
-import * as uploadValidator from "../parser/validators/uploadValidator";
+import * as uploadValidator from "./validators/uploadValidator";
 import { errorHandler } from "../errorHandler/errorHandler";
 import type { FastifyRequest } from "fastify";
 
@@ -17,7 +17,7 @@ const setRequestFile = (
   app: ReturnType<typeof Fastify>,
   fileFn: () => Promise<unknown>
 ) => {
-  app.addHook("onRequest", (req: FastifyRequest, _reply, done) => {
+  app.addHook("onRequest", (req: FastifyRequest, _reply: unknown, done: () => void) => {
     (req as unknown as { file?: () => Promise<unknown> }).file = fileFn;
     done();
   });
