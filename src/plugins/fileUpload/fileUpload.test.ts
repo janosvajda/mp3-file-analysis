@@ -13,10 +13,7 @@ const registerTestServer = async (analyzer: { countMp3Frames: (buffer: Buffer) =
   return app;
 };
 
-const setRequestFile = (
-  app: ReturnType<typeof Fastify>,
-  fileFn: () => Promise<unknown>
-) => {
+const setRequestFile = (app: ReturnType<typeof Fastify>, fileFn: () => Promise<unknown>) => {
   app.addHook("onRequest", (req: FastifyRequest, _reply: unknown, done: () => void) => {
     (req as unknown as { file?: () => Promise<unknown> }).file = fileFn;
     done();

@@ -4,11 +4,7 @@ import { MpAnalyseError } from "../../errorHandler/errorHandler";
 
 type Mp3Mimetype = "audio/mpeg" | "audio/mp3" | "audio/mpg";
 
-const ALLOWED_MIME_TYPES = new Set<Mp3Mimetype>([
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/mpg"
-]);
+const ALLOWED_MIME_TYPES = new Set<Mp3Mimetype>(["audio/mpeg", "audio/mp3", "audio/mpg"]);
 
 const EXPECTED_FIELD_NAME = "file";
 /**
@@ -25,7 +21,6 @@ const MP3_FRAME_SYNC_BYTE = 0xff;
  * - 4 bytes chosen to guarantee safe indexing and avoid false positives.
  */
 const MP3_MIN_HEADER_BYTES = 4;
-
 
 /**
  * Checks whether the buffer begins with a valid MP3 header signature.
@@ -48,12 +43,10 @@ function isValidMp3Header(buffer: Buffer): boolean {
 
   // 2) MPEG audio frame sync: 0xFF followed by byte starting with 111xxxxx
   const hasFrameSync =
-    buffer[0] === MP3_FRAME_SYNC_BYTE &&
-    (buffer[1] & 0b1110_0000) === 0b1110_0000;
+    buffer[0] === MP3_FRAME_SYNC_BYTE && (buffer[1] & 0b1110_0000) === 0b1110_0000;
 
   return startsWithId3 || hasFrameSync;
 }
-
 
 /**
  * Validates an uploaded file as an MP3 and returns its Buffer.
@@ -68,10 +61,7 @@ function isValidMp3Header(buffer: Buffer): boolean {
  *
  * On failure, logs a warning and throws an Error with a user-facing message.
  */
-export async function validateUpload(
-  file: MultipartFile,
-  log: FastifyBaseLogger
-): Promise<Buffer> {
+export async function validateUpload(file: MultipartFile, log: FastifyBaseLogger): Promise<Buffer> {
   if (file.fieldname !== EXPECTED_FIELD_NAME) {
     log.warn({ field: file.fieldname }, "Unexpected field name");
     throw new MpAnalyseError(`File field must be named '${EXPECTED_FIELD_NAME}'.`);

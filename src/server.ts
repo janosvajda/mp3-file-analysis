@@ -29,9 +29,7 @@ const PORT =
  * - Returns `{ frameCount }` on success.
  * - Returns `{ error }` with HTTP 400 on validation or processing errors.
  */
-export function buildServer(
-  loggerLevel: "info" | "warn" | "error" = "info"
-): FastifyInstance {
+export function buildServer(loggerLevel: "info" | "warn" | "error" = "info"): FastifyInstance {
   const server = Fastify({
     logger: { level: loggerLevel }
   });

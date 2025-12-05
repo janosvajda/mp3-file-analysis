@@ -92,15 +92,15 @@ const FRAME_SYNC_MASK = 0xffe00000 >>> 0;
  *   byte0 byte1 byte2 byte3
  *   [31....................0]
  */
-const MPEG_VERSION_OFFSET = 19;      // bits 20–19
-const LAYER_OFFSET = 17;             // bits 18–17
-const PROTECTION_BIT_OFFSET = 16;    // bit 16
-const BITRATE_INDEX_OFFSET = 12;     // bits 15–12
+const MPEG_VERSION_OFFSET = 19; // bits 20–19
+const LAYER_OFFSET = 17; // bits 18–17
+const PROTECTION_BIT_OFFSET = 16; // bit 16
+const BITRATE_INDEX_OFFSET = 12; // bits 15–12
 const SAMPLE_RATE_INDEX_OFFSET = 10; // bits 11–10
-const PADDING_BIT_OFFSET = 9;        // bit 9
-const CHANNEL_MODE_OFFSET = 6;       // bits 7–6
-const MODE_EXTENSION_OFFSET = 4;     // bits 5–4
-const EMPHASIS_OFFSET = 0;           // bits 1–0
+const PADDING_BIT_OFFSET = 9; // bit 9
+const CHANNEL_MODE_OFFSET = 6; // bits 7–6
+const MODE_EXTENSION_OFFSET = 4; // bits 5–4
+const EMPHASIS_OFFSET = 0; // bits 1–0
 
 /**
  * MPEG version identification (2-bit field).
@@ -196,6 +196,10 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
   }
 
   // Only Layer III is supported by this parser.
+  // @todo It also worked with mp2, it counted its frames
+  // but I was not sure wether it was ok or not as Medianfo did not support that mp2,
+  // therefore I do not support it now.
+  // I found on the internet....
   if (!isLayer3) {
     throw new Error("Unsupported MPEG version or layer.");
   }
@@ -226,7 +230,8 @@ export function parseFrameHeader(buffer: Buffer, offset: number): FrameHeader {
     throw new Error("Invalid bitrate or sample rate in frame header.");
   }
 
- return {
+  //@todo this should be cleaned as there are things that were just useful for debugging
+  return {
     bitrateKbps,
     sampleRate,
     padding: paddingBit,

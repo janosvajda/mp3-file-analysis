@@ -13,10 +13,7 @@ type FileUploadPluginOptions = {
   maxFileSizeBytes?: number;
 };
 
-const {
-  HTTP_STATUS_PAYLOAD_TOO_LARGE: STATUS_TOO_LARGE,
-  HTTP_STATUS_OK: STATUS_OK
-} = http2;
+const { HTTP_STATUS_PAYLOAD_TOO_LARGE: STATUS_TOO_LARGE, HTTP_STATUS_OK: STATUS_OK } = http2;
 
 /**
  * Fastify plugin registering the `/file-upload` endpoint.
@@ -46,9 +43,7 @@ export const fileUploadRoutes = fp<FileUploadPluginOptions>(
       try {
         const frameCount = analyzer.countMp3Frames(buffer);
 
-        reply
-          .code(STATUS_OK)
-          .header("Content-Type", "application/json");
+        reply.code(STATUS_OK).header("Content-Type", "application/json");
 
         return { frameCount };
       } catch (error) {

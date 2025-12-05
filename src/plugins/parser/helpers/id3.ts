@@ -54,13 +54,12 @@ export function parseId3v2TagSize(buffer: Buffer): number {
   }
 
   // Size is stored in 4 sync-safe bytes starting at offset 6.
-  const sizeBytes = buffer.subarray(
-    ID3V2_SIZE_FIELD_OFFSET,
-    ID3V2_SIZE_FIELD_END
-  );
+  const sizeBytes = buffer.subarray(ID3V2_SIZE_FIELD_OFFSET, ID3V2_SIZE_FIELD_END);
 
   const size = decodeSyncSafeSize(sizeBytes);
 
   // Header is 10 bytes long.
+  // @todo this must be checked and might be improved as mp3 files can have diff ID3 headers,
+  // and some mp3 codec put this at the end of the file...
   return size + ID3V2_HEADER_SIZE;
 }

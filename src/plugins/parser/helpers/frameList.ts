@@ -30,9 +30,7 @@ const isMetadataFrame = (
   header: { mpegVersion: number; channelMode: number }
 ): boolean => {
   const offset =
-    frameOffset +
-    MP3_FRAME_HEADER_BYTES +
-    sideInfoSize(header.mpegVersion, header.channelMode);
+    frameOffset + MP3_FRAME_HEADER_BYTES + sideInfoSize(header.mpegVersion, header.channelMode);
   const magic = buffer.subarray(offset, offset + 4);
   return magic.equals(XING_MAGIC) || magic.equals(INFO_MAGIC);
 };
@@ -91,9 +89,7 @@ export function frameList(buffer: Buffer, logger: Logger): FrameInfo[] {
           dataSize: frameSize - headerSize
         });
 
-        logger.info(
-          `Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`
-        );
+        logger.info(`Frame ${frames.length - 1} @ offset ${offset} size ${frameSize}`);
 
         foundFirstFrame = true;
       }

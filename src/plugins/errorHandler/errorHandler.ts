@@ -53,8 +53,7 @@ export function isFileTooLargeError(error: unknown): error is FastifyErrorShape 
 function normalizeError(error: unknown) {
   const err = error as FastifyErrorShape;
   const isMpAnalyse = error instanceof MpAnalyseError;
-  const isFileTooLarge =
-    isFileTooLargeError(error) || err.statusCode === STATUS_TOO_LARGE;
+  const isFileTooLarge = isFileTooLargeError(error) || err.statusCode === STATUS_TOO_LARGE;
   const extractedMessage = getErrorMessage(err);
 
   let statusCode = STATUS_INTERNAL;
